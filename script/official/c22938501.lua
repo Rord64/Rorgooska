@@ -1,5 +1,5 @@
---再世の龍神 ワイクラー
---Regenesis Dragon
+--再世の導神 シェモース
+--Regenesis Sage
 --Scripted by Satella
 local s,id=GetID()
 function s.initial_effect(c)
@@ -13,19 +13,19 @@ function s.initial_effect(c)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
-	--Banish 1 Spell/Trap your opponent controls
+	--Negate the activation of an opponent's card or effect
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_REMOVE)
+	e2:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetCode(EVENT_FREE_CHAIN)
+	e2:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCost(Cost.SelfTribute)
-	e2:SetTarget(s.rmtg)
-	e2:SetOperation(s.rmop)
+	e2:SetCondition(s.negcon)
+	e2:SetCost(s.negcost)
+	e2:SetTarget(s.negtg)
+	e2:SetOperation(s.negop)
 	c:RegisterEffect(e2)
 	--Add this card to your hand
 	local e3=Effect.CreateEffect(c)
@@ -40,6 +40,7 @@ function s.initial_effect(c)
 	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
 end
+s.listed_series={SET_REGENESIS}
 function s.spconfilter(c)
 	return (c:IsBaseAttack(2500) or c:IsBaseDefense(2500)) and c:IsFaceup()
 end
@@ -48,18 +49,36 @@ function s.spcon(e,c)
 	return Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 		and Duel.IsExistingMatchingCard(s.spconfilter,0,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local exg=e:GetHandler():GetEquipGroup()
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and chkc:IsSpellTrap() and chkc:IsAbleToRemove() end
-	if chk==0 then return Duel.IsExistingTarget(aux.AND(Card.IsSpellTrap,Card.IsAbleToRemove),tp,0,LOCATION_ONFIELD,1,exg) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectTarget(tp,aux.AND(Card.IsSpellTrap,Card.IsAbleToRemove),tp,0,LOCATION_ONFIELD,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,tp,0)
+function s.thcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	return c:GetTurnID()==Duel.GetTurnCount() and Duel.IsTurnPlayer(1-tp)
 end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
-		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and ep==1-tp and Duel.IsChainNegatable(ev)
+end
+function s.negcostfilter(c)
+	return c:IsSetCard(SET_REGENESIS) and c:IsAbleToGraveAsCost()
+		and (c:IsFaceup() or c:IsLocation(LOCATION_HAND))
+end
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.IsExistingMatchingCard(s.negcostfilter,tp,LOCATION_ONFIELD|LOCATION_HAND,0,1,c) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.negcostfilter,tp,LOCATION_ONFIELD|LOCATION_HAND,0,1,1,c)
+	Duel.SendtoGrave(g,REASON_COST)
+end
+function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	local rc=re:GetHandler()
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+	if rc:IsDestructable() and rc:IsRelateToEffect(re) then
+		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,0,0)
+	end
+end
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
+		Duel.Destroy(eg,REASON_EFFECT)
 	end
 end
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)

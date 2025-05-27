@@ -1,5 +1,5 @@
---再世の龍神 ワイクラー
---Regenesis Dragon
+--再世の戦神 ベレシート
+--Regenesis Warrior
 --Scripted by Satella
 local s,id=GetID()
 function s.initial_effect(c)
@@ -13,10 +13,10 @@ function s.initial_effect(c)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
-	--Banish 1 Spell/Trap your opponent controls
+	--Return 1 monster your opponent controls to the hand
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_REMOVE)
+	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCode(EVENT_FREE_CHAIN)
@@ -24,8 +24,8 @@ function s.initial_effect(c)
 	e2:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCost(Cost.SelfTribute)
-	e2:SetTarget(s.rmtg)
-	e2:SetOperation(s.rmop)
+	e2:SetTarget(s.rttg)
+	e2:SetOperation(s.rtop)
 	c:RegisterEffect(e2)
 	--Add this card to your hand
 	local e3=Effect.CreateEffect(c)
@@ -48,18 +48,17 @@ function s.spcon(e,c)
 	return Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 		and Duel.IsExistingMatchingCard(s.spconfilter,0,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local exg=e:GetHandler():GetEquipGroup()
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and chkc:IsSpellTrap() and chkc:IsAbleToRemove() end
-	if chk==0 then return Duel.IsExistingTarget(aux.AND(Card.IsSpellTrap,Card.IsAbleToRemove),tp,0,LOCATION_ONFIELD,1,exg) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectTarget(tp,aux.AND(Card.IsSpellTrap,Card.IsAbleToRemove),tp,0,LOCATION_ONFIELD,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,tp,0)
+function s.rttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) and chkc:IsAbleToHand() end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToHand,tp,0,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
+	local g=Duel.SelectTarget(tp,Card.IsAbleToHand,tp,0,LOCATION_MZONE,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,1,tp,0)
 end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+function s.rtop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc:IsRelateToEffect(e) then
-		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 	end
 end
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)

@@ -1,5 +1,5 @@
---本気ギレパンダ
---Maji-Gire Panda (GOAT)
+--火炎鳥
+--Firebird (GOAT)
 --Battle destroyed registers while the mosnter is on field
 local s,id=GetID()
 function s.initial_effect(c)
@@ -19,16 +19,16 @@ function s.initial_effect(c)
 	e2:SetCondition(s.atkcon2)
 	c:RegisterEffect(e2)
 end
-function s.cfilter(c)
-	return not c:IsReason(REASON_BATTLE) and c:IsPreviousLocation(LOCATION_MZONE) and c:IsPreviousPosition(POS_FACEUP)
-		and (c:GetPreviousRaceOnField()&RACE_BEAST)~=0
+function s.cfilter(c,tp)
+	return not c:IsReason(REASON_BATTLE) and c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_MZONE)
+		and c:IsPreviousPosition(POS_FACEUP) and (c:GetPreviousRaceOnField()&RACE_WINGEDBEAST)~=0
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.cfilter,1,nil)
+	return eg:IsExists(s.cfilter,1,nil,tp)
 end
 function s.cfilter2(c,tp)
 	return c and c:IsLocation(LOCATION_MZONE) and c:IsPosition(POS_FACEUP)
-		and c:IsRace(RACE_BEAST) and c:IsBattleDestroyed()
+		and c:IsControler(tp) and c:IsRace(RACE_WINGEDBEAST) and c:IsBattleDestroyed()
 end
 function s.atkcon2(e,tp,eg,ep,ev,re,r,rp)
 	return s.cfilter2(Duel.GetAttacker()) or s.cfilter2(Duel.GetAttackTarget())

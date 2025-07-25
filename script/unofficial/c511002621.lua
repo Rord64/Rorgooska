@@ -50,11 +50,6 @@ function s.init(c)
 	e7:SetOperation(s.limitop)
 	Duel.RegisterEffect(e7,0)
 	--burn for destroy
-	local e8=Effect.CreateEffect(c)
-	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e8:SetCode(EVENT_DESTROYED)
-	e8:SetOperation(s.damop)
-	Duel.RegisterEffect(e8,0)
 	 --cannot attack
 	local e9=Effect.CreateEffect(c)
 	e9:SetType(EFFECT_TYPE_FIELD)

@@ -93,7 +93,6 @@ function s.limitop(e,tp,eg,ep,ev,re,r,rp)
 	local g2=Duel.GetMatchingGroup(s.limitfilter2,tp,0xff,0xff,nil)
 	for tc in g2:Iter() do
 		tc:RegisterFlagEffect(id+1,0,0,0)
-	end
 end
 function s.nttg(e,c)
 	return c==0 or c==1 or c:GetFlagEffect(id)==0
@@ -115,7 +114,6 @@ end
 function s.damfilter(c,p)
 	return c:IsPreviousControler(p) and c:IsPreviousLocation(LOCATION_MZONE) and c:IsReason(REASON_EFFECT)
 end
-function s.damop(e,tp,eg,ep,ev,re,r,rp)
 
 function s.atkcon(e)
 	return e:GetHandler():GetFlagEffect(id-1)~=0

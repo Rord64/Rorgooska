@@ -120,17 +120,6 @@ end
 function s.damfilter(c,p)
 	return c:IsPreviousControler(p) and c:IsPreviousLocation(LOCATION_MZONE) and c:IsReason(REASON_EFFECT)
 end
-function s.damop(e,tp,eg,ep,ev,re,r,rp)
-	for p=0,1 do
-		local pg=eg:Filter(s.damfilter,nil,p)
-		if #pg>0 then
-			local sum=pg:GetSum(Card.GetPreviousAttackOnField)//2
-			if sum>0 then
-				Duel.Damage(p,sum,REASON_EFFECT)
-			end
-		end
-	end
-end
 function s.atkcon(e)
 	return e:GetHandler():GetFlagEffect(id-1)~=0
 end

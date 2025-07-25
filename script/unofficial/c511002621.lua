@@ -50,6 +50,11 @@ function s.init(c)
 	e7:SetOperation(s.limitop)
 	Duel.RegisterEffect(e7,0)
 	--burn for destroy
+	local e8=Effect.CreateEffect(c)
+	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e8:SetCode(EVENT_DESTROYED)
+	e8:SetOperation(s.damop)
+	Duel.RegisterEffect(e8,0)
 	 --cannot attack
 	local e9=Effect.CreateEffect(c)
 	e9:SetType(EFFECT_TYPE_FIELD)
@@ -93,6 +98,7 @@ function s.limitop(e,tp,eg,ep,ev,re,r,rp)
 	local g2=Duel.GetMatchingGroup(s.limitfilter2,tp,0xff,0xff,nil)
 	for tc in g2:Iter() do
 		tc:RegisterFlagEffect(id+1,0,0,0)
+	end
 end
 function s.nttg(e,c)
 	return c==0 or c==1 or c:GetFlagEffect(id)==0
@@ -114,7 +120,17 @@ end
 function s.damfilter(c,p)
 	return c:IsPreviousControler(p) and c:IsPreviousLocation(LOCATION_MZONE) and c:IsReason(REASON_EFFECT)
 end
-
+function s.damop(e,tp,eg,ep,ev,re,r,rp)
+	for p=0,1 do
+		local pg=eg:Filter(s.damfilter,nil,p)
+		if #pg>0 then
+			local sum=pg:GetSum(Card.GetPreviousAttackOnField)//2
+			if sum>0 then
+				Duel.Damage(p,sum,REASON_EFFECT)
+			end
+		end
+	end
+end
 function s.atkcon(e)
 	return e:GetHandler():GetFlagEffect(id-1)~=0
 end
